@@ -24,16 +24,17 @@ const commentSchema = new mongoose.Schema({
 },{timestamps:true});
 
 commentSchema.pre("validate",function(next){
-    const hasText=this.text.trim().length()>0;
+    const hasText=this.text.trim().length>0;
     const hasMedia= this.mediaUrl.trim().length>0;
 
     if(!hasText && !hasMedia){
         return next(new Error("Comment must contain either text or media."))
     }
+    next();
 
 })
 
-export const Comment = mongoose.model("Comment" , commentschema);
+export const Comment = mongoose.model("Comment" , commentSchema);
 
 
 
