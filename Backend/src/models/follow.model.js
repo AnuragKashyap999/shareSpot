@@ -20,3 +20,5 @@ followSchema.index(
 )
 
 export const Follow = mongoose.model("Follow" , followSchema)
+
+

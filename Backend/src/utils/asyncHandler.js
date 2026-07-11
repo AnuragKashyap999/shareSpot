@@ -22,3 +22,26 @@ export default asyncHandler
 
 
 
+
+
+// registerUser
+//       │
+//       ▼
+// asyncHandler(registerUser)
+//       │
+//       ▼
+// Returns a NEW function
+
+// (req, res, next) => {
+//     Promise.resolve(
+//         registerUser(req, res, next)
+//     ).catch(...)
+// }
+
+//       │
+//       ▼
+// Express receives this function
+//       │
+//       ▼
+// Express calls it with:
+// (req, res, next)
