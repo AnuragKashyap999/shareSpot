@@ -20,10 +20,12 @@ const userSchema =new mongoose.Schema({
         required:true,
     },
     avatar:{
-        type:String  // cloudinary URL 
+        type:String , // cloudinary URL 
+        required:true
     },
     coverImage:{
         type:String, // cloudinary URL
+        default:""
     },
     bio:{
         type:String,
