@@ -3,6 +3,7 @@ import uploadOnCloudinary from '../utils/cloudinary.js'
 import asyncHandler from "../utils/asyncHandler.js"
 import ApiError from "../utils/ApiError.js"
 import ApiResponse from "../utils/ApiResponse.js"
+import { create } from 'domain'
 
 
 const generateAccessTokenAndRefreshToken = async (userId)=>{
@@ -154,3 +155,70 @@ const loginUser = asyncHandler(async(req,res)=>{
 })
 
 export {registerUser}
+
+
+
+
+const registerUser = asyncHandler((req,res)=>{
+
+    const {username , email, password } = req.body
+
+    if([username , email,password].some((field)=>field.trim()==='')){
+        throw new ApiError(400 ,"All fields are required")
+    }
+
+    const isUserExist = await User.findone(
+        $or[{username},{email}]
+    )
+
+    if(isUserExist){
+        throw new ApiError(400,"User is already exist")
+    }
+
+    // avatar 
+
+    const avatarLocalPath = req.files?.avatar[0]?.path  //url
+
+    if(!avatarLocalPath){
+        throw new ApiError(400,"avatar is require")
+    }
+
+    const coverImageLocalPath ;
+
+    if(req.files && req.files?.coverImage[0]?.path && Array.isArray(req.file.coverImage)){
+        coverImageLocalPath= req.files?.coverImage[0]?.path
+    }
+
+
+    const avatar = uploadOnCloudinary(avatarLocalPath)
+    const coverImage = uploadOnCloudinary(coverImageLocalPath)
+
+    if(!avatar){
+        throw new ApiError(400,"something wents wrong while uploading the avatar on cloudinary")
+    }
+
+    const bio = req.body?.bio || "";
+
+    const user = await User.create({
+        username:username.toLowerCase(),
+        email,
+        password,
+        bio,
+        avatar:avatar.url,
+        coverImage:coverImage.url || ""
+    })
+
+
+    const refreshToken = await user.generateAccessToken(user._id)
+    const asccessToken = await user.generateAccessToken(user._id)
+
+    
+
+
+
+
+
+
+
+
+})
