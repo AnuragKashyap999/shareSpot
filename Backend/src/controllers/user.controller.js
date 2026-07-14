@@ -101,13 +101,17 @@ const registerUser =asyncHandler(async (req,res)=>{
 
 
 const loginUser = asyncHandler(async(req,res)=>{
-    const {username,email} = req.body;
+    const {username ,email , password} = req.body;
 
-    if([username,email].some((field)=>field.trim()==="")){
+    if(!(username || email)){
         throw new ApiError(400,"username or email is required")
     }
 
-    const user = await User.findone({
+    if(!password){
+        throw new ApiError(400,"username or email is required")
+    }
+
+    const user = await User.findOne({
         $or:[{username},{email}]
     })
 
@@ -115,14 +119,14 @@ const loginUser = asyncHandler(async(req,res)=>{
         throw new ApiError(404,"User does not exist")
     }
 
-    const isPasswordValid = await user.isPasswordcorrect(password)
+    const isPasswordValid = await user.isPasswordCorrect(password)
 
 
     if(!isPasswordValid){
         throw new ApiError(401,"Invalid user credentials")
     }
 
-    const {accessToken,refreshToken}= generateAccessTokenAndRefreshToken(user._id)
+    const {accessToken,refreshToken}=await generateAccessTokenAndRefreshToken(user._id)
 
 
     const loggedInUser = await User.findById(user._id).
@@ -145,80 +149,8 @@ const loginUser = asyncHandler(async(req,res)=>{
             },
             "User logged In Successfully"
         )
-    )
-
-
-
-
-
-    
+    )   
 })
 
-export {registerUser}
+export {registerUser,loginUser}
 
-
-
-
-const registerUser = asyncHandler((req,res)=>{
-
-    const {username , email, password } = req.body
-
-    if([username , email,password].some((field)=>field.trim()==='')){
-        throw new ApiError(400 ,"All fields are required")
-    }
-
-    const isUserExist = await User.findone(
-        $or[{username},{email}]
-    )
-
-    if(isUserExist){
-        throw new ApiError(400,"User is already exist")
-    }
-
-    // avatar 
-
-    const avatarLocalPath = req.files?.avatar[0]?.path  //url
-
-    if(!avatarLocalPath){
-        throw new ApiError(400,"avatar is require")
-    }
-
-    const coverImageLocalPath ;
-
-    if(req.files && req.files?.coverImage[0]?.path && Array.isArray(req.file.coverImage)){
-        coverImageLocalPath= req.files?.coverImage[0]?.path
-    }
-
-
-    const avatar = uploadOnCloudinary(avatarLocalPath)
-    const coverImage = uploadOnCloudinary(coverImageLocalPath)
-
-    if(!avatar){
-        throw new ApiError(400,"something wents wrong while uploading the avatar on cloudinary")
-    }
-
-    const bio = req.body?.bio || "";
-
-    const user = await User.create({
-        username:username.toLowerCase(),
-        email,
-        password,
-        bio,
-        avatar:avatar.url,
-        coverImage:coverImage.url || ""
-    })
-
-
-    const refreshToken = await user.generateAccessToken(user._id)
-    const asccessToken = await user.generateAccessToken(user._id)
-
-    
-
-
-
-
-
-
-
-
-})
