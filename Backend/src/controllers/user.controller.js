@@ -1,4 +1,4 @@
-import User from '../models/user.model.js'
+import {User} from '../models/user.model.js'
 import uploadOnCloudinary from '../utils/cloudinary.js'
 import asyncHandler from "../utils/asyncHandler.js"
 import ApiError from "../utils/ApiError.js"
@@ -175,8 +175,9 @@ const logOut = asyncHandler( async ()=>{
     .clearCookie("accessToken",options)
     .clearCookie("refreshToken",options)
     .json(new ApiResponse(200,{},"User logged out successfully"))
-
 })
+
+const 
 
 export {registerUser,loginUser,logOut}
 
