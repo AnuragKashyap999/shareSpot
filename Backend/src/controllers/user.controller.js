@@ -177,7 +177,95 @@ const logOut = asyncHandler( async ()=>{
     .json(new ApiResponse(200,{},"User logged out successfully"))
 })
 
-const 
+const refreshAccessToken = asyncHandler(async(req,res)=>{
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
-export {registerUser,loginUser,logOut}
+    if(!incomingRefreshToken){
+        throw new ApiError(401,"Unauthorized request")
+    }
+
+    try {
+        const decodedToken =  jwt.verify(incomingRefreshToken,
+            process.env.REFRESH_TOKEN_SECRET)
+        
+        const user = await User.findById(decodedToken?._id)
+
+        if(!user){
+            throw new ApiError(401,"Invalid refresh token")
+        }
+
+        if(incomingRefreshToken!==user?.refreshToken){
+            throw new ApiError(401,"Refresh token is expried or used")
+        }
+
+        const {accessToken,newRefreshToken} = await generateAccessTokenAndRefreshToken(user._id)
+
+        const options ={
+            httpOnly:true,
+            secure:true
+        } 
+
+        return res
+        .status(200)
+        .cookies(accessToken,options)
+        .cookies(newRefreshToken,options)
+        .json(
+            new ApiResponse(
+                200,
+                {accessToken,refreshToken:newRefreshToken},
+                "Access token refreshed"
+            )
+        ) 
+    } catch (error) {
+        throw new ApiError(401,error.message || "Invalid refresh token.")
+    }
+})
+
+const changeCurrentpassword = asyncHandler(async(req,res)=>{
+
+    const {oldPassword,newPassword} = req.body;
+    
+    if([oldPassword,newPassword].some((field)=>field.trim()==="")){
+        throw new ApiError(401,"Old Password and new Password both are required.")
+    }
+
+    const user = await User.findById(req.user?._id)
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+    if(!isPasswordCorrect){
+        throw new ApiError(400,"Invalid old password")
+    }
+
+    user.password= newPassword
+
+    await user.save({validateBeforeSave:false})
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            {},
+            "Password changed suceessfully"
+        )
+    )
+})
+
+const updateUserdetails = asyncHandler(async(req,res)=>{
+
+    
+
+
+    return res
+    .status(200).
+    json(
+        new ApiResponse(
+            200,
+            {},
+            "User details sucessfully update"
+        )
+    )
+}) 
+
+export {registerUser,loginUser,logOut,refreshAccessToken,changeCurrentpassword}
 
